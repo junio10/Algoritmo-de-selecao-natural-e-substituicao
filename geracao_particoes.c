@@ -74,6 +74,126 @@ void classificacao_interna(char *nome_arquivo_entrada, Nomes *nome_arquivos_said
 void selecao_com_substituicao(char *nome_arquivo_entrada, Nomes *nome_arquivos_saida, int M)
 {
 	//TODO: Inserir aqui o codigo do algoritmo de geracao de particoes
+
+    Cliente *le[M], *aux[M];
+    Cliente *var;
+    Nomes *novaParticao, *proximo;
+    int i = 0, contCongelado = 0, controlador = 1;
+
+    //Abrindo arquivo para leitura
+    FILE* entrada = fopen(nome_arquivo_entrada,"rb");
+    if(entrada == NULL){
+        printf("Erro ao abrir com sucesso");
+    }else {
+        int posvet = 0;
+        //ENCHENDO O VETOR
+        /*
+        while(i < M && !feof(entrada)){
+            le[i] = le_cliente(entrada);
+            i++;
+
+        }*/
+
+
+        FILE* write;
+        //Abrindo arquivo para escrita
+        write = fopen(nome_arquivos_saida->nome, "wb");
+        if(write == NULL){
+            printf("Erro ao abrir arquivo");
+        }
+        proximo = nome_arquivos_saida->prox;
+        Cliente *menor;
+
+
+
+        while (!feof(entrada)) {
+            //enquanto nao chegar no fim do arquivo, vai pegando o menor valor
+
+                while (i < M && !feof(entrada)) {
+                    le[i] = le_cliente(entrada);
+                    i++;
+
+
+                }
+
+
+            if(i == 1){
+                break;
+            }else if(i != M){
+                M = i-1;
+            }
+            menor = le[1];
+            for(int j = 0; j < M; j++){
+                //tem que ser difente, pois se for igual esta congelado
+                    if (le[j]->cod_cliente < menor->cod_cliente && le[j]->cod_cliente != 0){
+                        menor = le[j];
+                        posvet = j;
+                    }
+
+            }
+
+
+            //grava no arquivo
+            salva_cliente(le[posvet], write);
+            //ler a proxima linha
+            var = le[posvet];
+            le[posvet] = le_cliente(entrada);
+
+            if(le[posvet] != NULL) {
+                if (le[posvet]->cod_cliente < var->cod_cliente) {
+                    //indica que esta congelado
+                    aux[contCongelado] = le[posvet];
+                    le[posvet]->cod_cliente = 0;
+                    contCongelado++;
+                }
+            }else{
+                //primeira vez que entrar
+                if(contCongelado == 0){
+                  //no caso, se ele não tiver nenhum cont congelado e o arquivo estiver no fim
+
+                    //gravar os arquivos que faltam
+
+                    for(int i= 0; i < M; i++) {
+                        for (int j = 0; j < M; j++) {
+                            //tem que ser difente, pois se for igual esta congelado
+                            if (le[j] != NULL && le[j]->cod_cliente < 100 && le[j]->cod_cliente != 0 ) {
+                                posvet = j;
+                                menor->cod_cliente = le[j]->cod_cliente;
+                            }
+                        }
+                        salva_cliente(le[posvet], write);
+                        le[posvet]->cod_cliente = 0;
+                    }
+
+
+                }
+
+            }
+            if(contCongelado == 6){
+                fclose(write);
+
+                for(int i = 0; i < M; i++){
+                   le[i]= 0;
+                   le[i] = aux[i];
+                }
+
+                char *nome_particao = proximo->nome;
+                proximo = proximo->prox;
+                write = fopen(nome_particao,"wb");
+                if(write == NULL){
+                    printf("\nErro ao abrir arquivo");
+                    break;
+                }
+            }
+
+
+
+        }
+        fclose(write);
+    }
+
+    fclose(entrada);
+
 }
 
 void selecao_natural(char *nome_arquivo_entrada, Nomes *nome_arquivos_saida, int M, int n)
