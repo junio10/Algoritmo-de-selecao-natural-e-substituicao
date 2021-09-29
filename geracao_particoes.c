@@ -7,9 +7,12 @@
 #endif
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "geracao_particoes.h"
 #include "nomes.h"
 #include "cliente.h"
+
 
 void classificacao_interna(char *nome_arquivo_entrada, Nomes *nome_arquivos_saida, int M)
 {
@@ -76,7 +79,7 @@ void selecao_com_substituicao(char *nome_arquivo_entrada, Nomes *nome_arquivos_s
 	//TODO: Inserir aqui o codigo do algoritmo de geracao de particoes
 
     Cliente *le[M], *aux[M];
-    Cliente *var;
+    Cliente *recemGravado;
     Nomes *novaParticao, *proximo;
     int i = 0, contCongelado = 0, controlador = 1;
 
@@ -86,13 +89,7 @@ void selecao_com_substituicao(char *nome_arquivo_entrada, Nomes *nome_arquivos_s
         printf("Erro ao abrir com sucesso");
     }else {
         int posvet = 0;
-        //ENCHENDO O VETOR
-        /*
-        while(i < M && !feof(entrada)){
-            le[i] = le_cliente(entrada);
-            i++;
 
-        }*/
 
 
         FILE* write;
@@ -101,32 +98,36 @@ void selecao_com_substituicao(char *nome_arquivo_entrada, Nomes *nome_arquivos_s
         if(write == NULL){
             printf("Erro ao abrir arquivo");
         }
+
         proximo = nome_arquivos_saida->prox;
         Cliente *menor;
-
+        menor = (Cliente*)malloc(sizeof(Cliente));
 
 
         while (!feof(entrada)) {
+            int menorcmp = 100;
             //enquanto nao chegar no fim do arquivo, vai pegando o menor valor
-
-                while (i < M && !feof(entrada)) {
-                    le[i] = le_cliente(entrada);
-                    i++;
-
-
+            //condicao para encher o vetor
+                if(controlador == 1) {
+                    while (i < M && !feof(entrada)) {
+                        le[i] = le_cliente(entrada);
+                        i++;
+                    }
+                    controlador = 0;
+                    if(i == 1){
+                        break;
+                    }else if(i != M){
+                        M = i-1;
+                    }
                 }
 
 
-            if(i == 1){
-                break;
-            }else if(i != M){
-                M = i-1;
-            }
-            menor = le[1];
+
             for(int j = 0; j < M; j++){
                 //tem que ser difente, pois se for igual esta congelado
-                    if (le[j]->cod_cliente < menor->cod_cliente && le[j]->cod_cliente != 0){
+                    if (le[j]->cod_cliente < menorcmp && le[j]->cod_cliente != 0){
                         menor = le[j];
+                        menorcmp = le[j]->cod_cliente;
                         posvet = j;
                     }
 
@@ -136,13 +137,17 @@ void selecao_com_substituicao(char *nome_arquivo_entrada, Nomes *nome_arquivos_s
             //grava no arquivo
             salva_cliente(le[posvet], write);
             //ler a proxima linha
-            var = le[posvet];
+            recemGravado = le[posvet];
             le[posvet] = le_cliente(entrada);
 
             if(le[posvet] != NULL) {
-                if (le[posvet]->cod_cliente < var->cod_cliente) {
+                if (le[posvet]->cod_cliente < recemGravado->cod_cliente) {
                     //indica que esta congelado
-                    aux[contCongelado] = le[posvet];
+                    Cliente *temp = (Cliente*) malloc(sizeof(Cliente));
+                    temp->cod_cliente = le[posvet]->cod_cliente;
+                    strcpy(temp->nome, le[posvet]->nome);
+                    //passando para a proxima particao
+                    aux[contCongelado] = temp;
                     le[posvet]->cod_cliente = 0;
                     contCongelado++;
                 }
@@ -150,19 +155,22 @@ void selecao_com_substituicao(char *nome_arquivo_entrada, Nomes *nome_arquivos_s
                 //primeira vez que entrar
                 if(contCongelado == 0){
                   //no caso, se ele não tiver nenhum cont congelado e o arquivo estiver no fim
-
+                  menorcmp = 100;
                     //gravar os arquivos que faltam
 
                     for(int i= 0; i < M; i++) {
                         for (int j = 0; j < M; j++) {
                             //tem que ser difente, pois se for igual esta congelado
-                            if (le[j] != NULL && le[j]->cod_cliente < 100 && le[j]->cod_cliente != 0 ) {
+                            if (le[j] != NULL && le[j]->cod_cliente < menorcmp && le[j]->cod_cliente != 0 ) {
                                 posvet = j;
                                 menor->cod_cliente = le[j]->cod_cliente;
+                                menorcmp = le[j]->cod_cliente;
                             }
                         }
-                        salva_cliente(le[posvet], write);
-                        le[posvet]->cod_cliente = 0;
+                        if(le[posvet]->cod_cliente != 0) {
+                            salva_cliente(le[posvet], write);
+                            le[posvet]->cod_cliente = 0;
+                        }
                     }
 
 
@@ -171,9 +179,7 @@ void selecao_com_substituicao(char *nome_arquivo_entrada, Nomes *nome_arquivos_s
             }
             if(contCongelado == 6){
                 fclose(write);
-
                 for(int i = 0; i < M; i++){
-                   le[i]= 0;
                    le[i] = aux[i];
                 }
 
