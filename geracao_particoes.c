@@ -155,10 +155,11 @@ void selecao_com_substituicao(char *nome_arquivo_entrada, Nomes *nome_arquivos_s
                 //primeira vez que entrar
                 if(contCongelado == 0){
                   //no caso, se ele não tiver nenhum cont congelado e o arquivo estiver no fim
-                  menorcmp = 100;
+                  
                     //gravar os arquivos que faltam
 
                     for(int i= 0; i < M; i++) {
+                        menorcmp = 100;
                         for (int j = 0; j < M; j++) {
                             //tem que ser difente, pois se for igual esta congelado
                             if (le[j] != NULL && le[j]->cod_cliente < menorcmp && le[j]->cod_cliente != 0 ) {
@@ -178,6 +179,7 @@ void selecao_com_substituicao(char *nome_arquivo_entrada, Nomes *nome_arquivos_s
 
             }
             if(contCongelado == 6){
+                contCongelado = 0;
                 fclose(write);
                 for(int i = 0; i < M; i++){
                    le[i] = aux[i];
