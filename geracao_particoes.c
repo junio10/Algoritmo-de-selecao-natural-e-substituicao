@@ -142,12 +142,13 @@ void selecao_com_substituicao(char *nome_arquivo_entrada, Nomes *nome_arquivos_s
 
             if(le[posvet] != NULL) {
                 if (le[posvet]->cod_cliente < recemGravado->cod_cliente) {
-                    //indica que esta congelado
+                    //criando para colocar no vetor de congelados
                     Cliente *temp = (Cliente*) malloc(sizeof(Cliente));
                     temp->cod_cliente = le[posvet]->cod_cliente;
                     strcpy(temp->nome, le[posvet]->nome);
                     //passando para a proxima particao
                     aux[contCongelado] = temp;
+                    //indica que esta congelado
                     le[posvet]->cod_cliente = 0;
                     contCongelado++;
                 }
@@ -155,7 +156,6 @@ void selecao_com_substituicao(char *nome_arquivo_entrada, Nomes *nome_arquivos_s
                 //primeira vez que entrar
                 if(contCongelado == 0){
                   //no caso, se ele não tiver nenhum cont congelado e o arquivo estiver no fim
-                  
                     //gravar os arquivos que faltam
 
                     for(int i= 0; i < M; i++) {
