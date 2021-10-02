@@ -12,8 +12,20 @@
 #include "geracao_particoes.h"
 #include "nomes.h"
 #include "cliente.h"
+#include <limits.h>
+int estavazio(Cliente* vet, int n){
+    int soma;
+    for(int i = 0; i < n; i++){
+        if(vet[i].cod_cliente == 0){
+            soma++;
+        }
+    }
+    if(soma == 6){
+        return 1;
+    }
+    return 0;
 
-
+}
 void classificacao_interna(char *nome_arquivo_entrada, Nomes *nome_arquivos_saida, int M)
 {
 	int fim = 0; //variável de controle para saber se arquivo de entrada terminou
@@ -86,11 +98,9 @@ void selecao_com_substituicao(char *nome_arquivo_entrada, Nomes *nome_arquivos_s
     //Abrindo arquivo para leitura
     FILE* entrada = fopen(nome_arquivo_entrada,"rb");
     if(entrada == NULL){
-        printf("Erro ao abrir com sucesso");
+        printf("Erro ao abrir arquivo");
     }else {
         int posvet = 0;
-
-
 
         FILE* write;
         //Abrindo arquivo para escrita
@@ -103,10 +113,8 @@ void selecao_com_substituicao(char *nome_arquivo_entrada, Nomes *nome_arquivos_s
         Cliente *menor;
         menor = (Cliente*)malloc(sizeof(Cliente));
 
-
         while (!feof(entrada)) {
-            int menorcmp = 100;
-            //enquanto nao chegar no fim do arquivo, vai pegando o menor valor
+            int menorcmp = INT_MAX;
             //condicao para encher o vetor
                 if(controlador == 1) {
                     while (i < M && !feof(entrada)) {
@@ -120,9 +128,7 @@ void selecao_com_substituicao(char *nome_arquivo_entrada, Nomes *nome_arquivos_s
                         M = i-1;
                     }
                 }
-
-
-
+            //Condicao para achar a menor posicao
             for(int j = 0; j < M; j++){
                 //tem que ser difente, pois se for igual esta congelado
                     if (le[j]->cod_cliente < menorcmp && le[j]->cod_cliente != 0){
@@ -130,9 +136,7 @@ void selecao_com_substituicao(char *nome_arquivo_entrada, Nomes *nome_arquivos_s
                         menorcmp = le[j]->cod_cliente;
                         posvet = j;
                     }
-
             }
-
 
             //grava no arquivo
             salva_cliente(le[posvet], write);
@@ -159,7 +163,7 @@ void selecao_com_substituicao(char *nome_arquivo_entrada, Nomes *nome_arquivos_s
                     //gravar os arquivos que faltam
 
                     for(int i= 0; i < M; i++) {
-                        menorcmp = 100;
+                        menorcmp = INT_MAX;
                         for (int j = 0; j < M; j++) {
                             //tem que ser difente, pois se for igual esta congelado
                             if (le[j] != NULL && le[j]->cod_cliente < menorcmp && le[j]->cod_cliente != 0 ) {
@@ -173,8 +177,6 @@ void selecao_com_substituicao(char *nome_arquivo_entrada, Nomes *nome_arquivos_s
                             le[posvet]->cod_cliente = 0;
                         }
                     }
-
-
                 }
 
             }
@@ -184,7 +186,6 @@ void selecao_com_substituicao(char *nome_arquivo_entrada, Nomes *nome_arquivos_s
                 for(int i = 0; i < M; i++){
                    le[i] = aux[i];
                 }
-
                 char *nome_particao = proximo->nome;
                 proximo = proximo->prox;
                 write = fopen(nome_particao,"wb");
@@ -193,8 +194,6 @@ void selecao_com_substituicao(char *nome_arquivo_entrada, Nomes *nome_arquivos_s
                     break;
                 }
             }
-
-
 
         }
         fclose(write);
@@ -207,5 +206,143 @@ void selecao_com_substituicao(char *nome_arquivo_entrada, Nomes *nome_arquivos_s
 void selecao_natural(char *nome_arquivo_entrada, Nomes *nome_arquivos_saida, int M, int n)
 {
 	//TODO: Inserir aqui o codigo do algoritmo de geracao de particoes
+    FILE *entrada = fopen(nome_arquivo_entrada,"rb");
+    if (entrada == NULL){
+        printf("erro ao abrir o arquivo \n");
+    }else{
+
+
+    Cliente *repositorio[n];
+    Cliente *memoria[M];
+    Cliente *lecl;
+    Cliente *reseva;
+
+    int menor = INT_MAX;
+    int menornum,controle =1, ind, i=0;
+    int indRes = 0;
+
+    FILE *saida = fopen(nome_arquivos_saida->nome,"wb");
+    Nomes *proximo;
+    proximo = nome_arquivos_saida->prox;
+    if(saida == NULL){
+            printf("Erro ao abrir arquivo");
+    }
+
+
+        while(!feof(entrada)){
+
+        menor = INT_MAX;
+        //Salvar registros na memoria
+                if (controle == 1){
+                    while (i < M && !feof(entrada)){
+                        lecl = le_cliente(entrada);
+                        memoria[i] = lecl;
+                        i++;
+                    }
+                    controle = 0;
+                }
+                if (i == 1){
+                    break;
+                }else if ( i != M){
+                    M = i - 1;
+                }
+        // pegar o menor numero dos registros na memoria
+                for (int i = 0; i < M; i++){
+                    if (memoria[i]->cod_cliente < menor){
+                        menor = memoria[i]->cod_cliente;
+                        reseva = memoria[i];
+                        ind = i;
+
+                    }
+                }
+
+        // salvar na memora o menor valor
+
+                Cliente *recemGravado;
+                recemGravado = memoria[ind];
+                salva_cliente(memoria[ind],saida);
+                memoria[ind] =  le_cliente(entrada);
+
+                if ( memoria[ind] != NULL){
+                    while(memoria[ind]->cod_cliente < recemGravado->cod_cliente && indRes < n && !feof(entrada)) {
+                        Cliente *temp =(Cliente*)malloc(sizeof(Cliente));
+                        temp->cod_cliente = memoria[ind]->cod_cliente;
+                        strcpy(temp->nome, memoria[ind]->nome);
+                        repositorio[indRes] = temp;
+                        indRes++;
+                        if(indRes == 6){
+                            memoria[ind]->cod_cliente= 0;
+                            break;
+                        }
+                        memoria[ind] = le_cliente(entrada);
+
+
+                    }
+                    if(indRes == n){
+                        //falta fazer escrever de forma ordenada para partição
+                        for (int i = 0; i < M; i++) {
+                            menor = INT_MAX;
+                            for (int j = 0; j < M; j++) {
+                                //tem que ser difente, pois se for igual esta congelado
+                                if (memoria[j] != NULL && memoria[j]->cod_cliente < menor &&memoria[j]->cod_cliente != 0) {
+                                    ind = j;
+                                    menor = memoria[j]->cod_cliente;
+                                }
+                            }
+                            if (memoria[ind]->cod_cliente != 0) {
+                                salva_cliente(memoria[ind], saida);
+                                memoria[ind]->cod_cliente = 0;
+                            }
+                        }
+                        fclose(saida);
+                        indRes = 0;
+                        char *arqsaida = proximo->nome;
+                        proximo = proximo->prox;
+                        saida = fopen(arqsaida, "wb");
+                        if (saida == NULL) {
+                            printf("falha ao abrir o arquivo \n");
+                        }
+
+
+                        for (int i = 0; i < n; i++) {
+                            //passa para a memoria
+                            memoria[i] = repositorio[i];
+                        }
+
+
+                    }
+                }
+                if (feof(entrada)){
+                    int cond;
+                    cond = estavazio(repositorio, n);
+                    for (int i = 0; i < M; i++) {
+                        menor = INT_MAX;
+                        for (int j = 0; j < M; j++) {
+                            //tem que ser difente, pois se for igual esta congelado
+                            if (memoria[j] != NULL && memoria[j]->cod_cliente < menor &&memoria[j]->cod_cliente != 0) {
+                                ind = j;
+                                menor = memoria[j]->cod_cliente;
+                            }
+                        }
+                        if (memoria[ind]->cod_cliente != 0) {
+                            salva_cliente(memoria[ind], saida);
+                            memoria[ind]->cod_cliente = 0;
+                        }
+                    }
+
+
+                }
+
+
+
+
+            }
+        fclose(saida);
+
+
+
+    }
+    fclose(entrada);
+
 }
 
