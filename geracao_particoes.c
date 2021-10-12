@@ -13,19 +13,7 @@
 #include "nomes.h"
 #include "cliente.h"
 #include <limits.h>
-int estavazio(Cliente* vet, int n){
-    int soma;
-    for(int i = 0; i < n; i++){
-        if(vet[i].cod_cliente == 0){
-            soma++;
-        }
-    }
-    if(soma == 6){
-        return 1;
-    }
-    return 0;
 
-}
 void classificacao_interna(char *nome_arquivo_entrada, Nomes *nome_arquivos_saida, int M)
 {
 	int fim = 0; //variável de controle para saber se arquivo de entrada terminou
@@ -92,7 +80,7 @@ void selecao_com_substituicao(char *nome_arquivo_entrada, Nomes *nome_arquivos_s
 
     Cliente *le[M], *aux[M];
     Cliente *recemGravado;
-    Nomes *novaParticao, *proximo;
+    Nomes *proximo;
     int i = 0, contCongelado = 0, controlador = 1;
 
     //Abrindo arquivo para leitura
@@ -152,7 +140,7 @@ void selecao_com_substituicao(char *nome_arquivo_entrada, Nomes *nome_arquivos_s
                     strcpy(temp->nome, le[posvet]->nome);
                     //passando para a proxima particao
                     aux[contCongelado] = temp;
-                    //indica que esta congelado
+                    //indica que esta congelado, o 0 indique o que o valo esta congelado
                     le[posvet]->cod_cliente = 0;
                     contCongelado++;
                 }
@@ -215,10 +203,10 @@ void selecao_natural(char *nome_arquivo_entrada, Nomes *nome_arquivos_saida, int
     Cliente *repositorio[n];
     Cliente *memoria[M];
     Cliente *lecl;
-    Cliente *reseva;
+
 
     int menor = INT_MAX;
-    int menornum,controle =1, ind, i=0;
+    int controle =1, ind, i=0;
     int indRes = 0;
 
     FILE *saida = fopen(nome_arquivos_saida->nome,"wb");
@@ -227,8 +215,6 @@ void selecao_natural(char *nome_arquivo_entrada, Nomes *nome_arquivos_saida, int
     if(saida == NULL){
             printf("Erro ao abrir arquivo");
     }
-
-
         while(!feof(entrada)){
 
         menor = INT_MAX;
@@ -240,23 +226,23 @@ void selecao_natural(char *nome_arquivo_entrada, Nomes *nome_arquivos_saida, int
                         i++;
                     }
                     controle = 0;
+                    if (i == 1){
+                        break;
+                    }else if ( i != M){
+                        M = i - 1;
+                    }
                 }
-                if (i == 1){
-                    break;
-                }else if ( i != M){
-                    M = i - 1;
-                }
+
         // pegar o menor numero dos registros na memoria
                 for (int i = 0; i < M; i++){
                     if (memoria[i]->cod_cliente < menor){
                         menor = memoria[i]->cod_cliente;
-                        reseva = memoria[i];
                         ind = i;
 
                     }
                 }
 
-        // salvar na memora o menor valor
+        // salvar na memoria o menor valor
 
                 Cliente *recemGravado;
                 recemGravado = memoria[ind];
@@ -278,12 +264,13 @@ void selecao_natural(char *nome_arquivo_entrada, Nomes *nome_arquivos_saida, int
 
 
                     }
+                    //se o reservatorio esta cheio entrar aqui, e grava o que tem na memoria
+                    //e passar o que tem no reservatorio para a memoria
                     if(indRes == n){
-                        //falta fazer escrever de forma ordenada para partição
+                        //escreve de forma ordernada o que tem na memoria na partição
                         for (int i = 0; i < M; i++) {
                             menor = INT_MAX;
                             for (int j = 0; j < M; j++) {
-                                //tem que ser difente, pois se for igual esta congelado
                                 if (memoria[j] != NULL && memoria[j]->cod_cliente < menor &&memoria[j]->cod_cliente != 0) {
                                     ind = j;
                                     menor = memoria[j]->cod_cliente;
@@ -303,22 +290,17 @@ void selecao_natural(char *nome_arquivo_entrada, Nomes *nome_arquivos_saida, int
                             printf("falha ao abrir o arquivo \n");
                         }
 
-
                         for (int i = 0; i < n; i++) {
-                            //passa para a memoria
+                            //passa para a memoria, o que tem no reservatorio
                             memoria[i] = repositorio[i];
                         }
-
-
                     }
                 }
+                //se o arquivo acabou, gravar o que tem na memoria
                 if (feof(entrada)){
-                    int cond;
-                    cond = estavazio(repositorio, n);
                     for (int i = 0; i < M; i++) {
                         menor = INT_MAX;
                         for (int j = 0; j < M; j++) {
-                            //tem que ser difente, pois se for igual esta congelado
                             if (memoria[j] != NULL && memoria[j]->cod_cliente < menor &&memoria[j]->cod_cliente != 0) {
                                 ind = j;
                                 menor = memoria[j]->cod_cliente;
@@ -330,17 +312,9 @@ void selecao_natural(char *nome_arquivo_entrada, Nomes *nome_arquivos_saida, int
                         }
                     }
 
-
                 }
-
-
-
-
             }
         fclose(saida);
-
-
-
     }
     fclose(entrada);
 
